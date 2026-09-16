@@ -1,78 +1,30 @@
-# Basketball Intelligence Platform MVP
+# Basketball Intelligence Platform: Design Proposal
 
-Version 0.1 validates one workflow: coaches upload game data, store historical player stats, query trends, and see basic rule-based insights.
+A proposed coach-facing application for uploading game statistics, storing player history, and exploring trends. The goal is to reduce manual stat tracking and give coaches a practical way to review recent performance.
 
-## Stack
+**Current repository status: design documentation only.** Application source, a package manifest, migrations, and a runnable demo have not been committed here. The items below describe the intended MVP and are not implemented features in this repository.
 
-- Next.js App Router, React, TypeScript
-- Next.js API routes
-- PostgreSQL, Prisma
-- Recharts
-- Tailwind CSS
+## Proposed workflow
 
-## Architecture
+1. Upload a CSV box score or enter statistics manually.
+2. Validate and normalize player/game/stat records.
+3. Store them in a relational database.
+4. Filter player history by metric, time window, opponent, and location.
+5. Display simple trends and rule-based summaries.
 
-The schema is sport-neutral from day one:
+## Intended stack and data model
 
-- `Organization`
-- `Team`
-- `Player`
-- `Game`
-- `StatType`
-- `PlayerGameStat`
-- `DataUpload`
+| Area | Proposed choice |
+| --- | --- |
+| Interface | Next.js, React, TypeScript, Tailwind CSS, Recharts |
+| API | Next.js route handlers |
+| Storage | PostgreSQL and Prisma |
+| Core entities | Organization, Team, Player, Game, StatType, PlayerGameStat, DataUpload |
+| Ingestion | CSV first; manual entry as a fallback |
 
-Basketball stats are seed data and UI defaults, not fixed columns. A player stat is stored as `Player + Game + StatType + Value`, so future football, soccer, volleyball, and baseball metrics can be added without schema redesign.
+The proposed stat model stores `Player + Game + StatType + Value`, allowing different sports and metrics without adding a database column for every statistic. The tradeoff is more validation and joins than a fixed basketball-specific table.
 
-Upload ingestion follows this path:
-
-`Data Source -> Parser -> Normalized Stats -> Database`
-
-CSV parsing is implemented. PDF and OCR/photo uploads are represented in the parser abstraction but intentionally not implemented in MVP 0.1.
-
-## Local Setup
-
-1. Install dependencies:
-
-```bash
-npm install
-```
-
-2. Create `.env`:
-
-```bash
-cp .env.example .env
-```
-
-3. Update `DATABASE_URL` in `.env` for your PostgreSQL instance.
-
-4. Run migrations:
-
-```bash
-npm run prisma:migrate -- --name init
-```
-
-The repository also includes the initial SQL migration under `prisma/migrations`.
-
-5. Seed demo data:
-
-```bash
-npm run db:seed
-```
-
-The seed creates one basketball team, 12 players, 20 games, realistic stat history, upload records, and enough trends to exercise the Query Builder and insight engine.
-
-6. Start development:
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-## CSV Upload Format
-
-CSV uploads should use one stat per row:
+## Proposed CSV format
 
 ```csv
 date,opponent,location,jerseyNumber,statName,value
@@ -80,29 +32,21 @@ date,opponent,location,jerseyNumber,statName,value
 2026-02-20,Central Prep,Home,1,Rebounds,6
 ```
 
-Supported player matching:
+Player matching would use jersey number within a team, or first/last name with explicit conflict handling.
 
-- `jerseyNumber`
-- or `playerFirstName` and `playerLastName`
+## Implementation checklist
 
-See `sample-game-upload.csv` for a small upload file.
+- [ ] Commit the application source and dependency manifest.
+- [ ] Add the Prisma schema and migrations.
+- [ ] Implement CSV validation, duplicate detection, and useful upload errors.
+- [ ] Provide fictional demo data and a reproducible local setup.
+- [ ] Connect player history, queries, and rule-based summaries.
+- [ ] Add access control before using real student-athlete data in a hosted application.
 
-## MVP Pages
+PDF parsing, OCR, fatigue scoring, injury prediction, and AI-generated training recommendations are outside the initial proposal.
 
-- `/` Dashboard: roster, recent uploads, recent insights, team/player creation, CSV upload
-- `/players/[playerId]`: season averages, last 3/5 games, trend chart, insights, historical log
-- `/query`: polished filter-based Query Builder for player/team, metric, and timeframe
+## Related working projects
 
-## API Routes
-
-- `POST /api/teams`
-- `POST /api/players`
-- `POST /api/uploads`
-- `POST /api/query`
-- `POST /api/insights`
-- `GET /api/players/[playerId]`
-- `GET /api/bootstrap`
-
-## Deliberately Out of Scope
-
-No authentication, AI recommendations, fatigue scores, injury prediction, OCR implementation, camera uploads, notifications, wearables, or workout plans are included in this MVP.
+- [Sports Data Integration and Forecasting Pipeline](https://github.com/davislaroque/Sports-Data-Integration-and-Forecasting-Pipeline): API ingestion, odds normalization, and a dashboard.
+- [NBA Player Performance Forecasting](https://github.com/davislaroque/Sports_Prediction_Model): reproducible modeling and chronological evaluation.
+- [NBA API Player Lookup](https://github.com/davislaroque/NBA-API-PLAYER-LOOKUP): reusable schedule and box-score queries.
